@@ -30,7 +30,7 @@ Monitor AMS slot status, humidity levels, and temperature with historical charts
 
 <div class="feature-card" markdown>
 ### [:material-tune-vertical: Printer Control](printer-control.md)
-Chamber temperature, light control, fan settings, and AI detection modules.
+Print from printer cards via button or drag-and-drop, chamber temperature, light control, fan settings, and AI detection modules.
 </div>
 
 </div>
