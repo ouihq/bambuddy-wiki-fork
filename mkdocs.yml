@@ -162,6 +162,7 @@ nav:
       - File Manager: features/file-manager.md
       - Backup & Restore: features/backup.md
       - System Info: features/system-info.md
+      - Bug Report: features/bug-report.md
       - Authentication: features/authentication.md
 
   - Reference:
