@@ -34,9 +34,13 @@ Permissions follow a `resource:action` pattern. Categories include:
 - **Queue**: read, create, update_own, update_all, delete_own, delete_all, reorder
 - **Library**: read, upload, update_own, update_all, delete_own, delete_all
 - **Projects**: read, create, update, delete
+- **Inventory**: read, create, update, delete, view_assignments
 - **Settings**: read, update, backup, restore
 - **Users/Groups**: read, create, update, delete
 - And many more...
+
+!!! tip "Separating Inventory Access from AMS Assignments"
+    The `inventory:view_assignments` permission controls whether spool-to-AMS-slot assignment data is visible on the Printers page. This is separate from `inventory:read`, which controls access to the full Inventory page. Grant only `inventory:view_assignments` to let users see what's loaded in each AMS slot without exposing the full spool inventory.
 
 ### Ownership-Based Permissions
 
