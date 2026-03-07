@@ -270,7 +270,7 @@ Configure in **Settings → Filament**:
 | Setting | Description |
 |---------|-------------|
 | **Default Filament Cost** | Fallback cost per kg when a spool doesn't have an individual cost set (default: 25.00) |
-| **Currency** | Currency symbol used for cost display throughout the app (USD, EUR, GBP, etc.) |
+| **Currency** | Currency symbol used for cost display throughout the app (USD, EUR, GBP, MYR, and 23 more) |
 
 !!! tip "Set Costs on Your Spools"
     For the most accurate cost tracking, set `cost_per_kg` on each spool when you add it to inventory. The default cost is a rough estimate — individual spool prices give you precise per-print cost data.

@@ -84,7 +84,7 @@ services:
     #   docker compose up -d          → pulls pre-built image
     #   docker compose up -d --build  → builds from source
     container_name: bambuddy
-    network_mode: host  # Required for printer discovery
+    network_mode: host  # Recommended for automatic printer discovery
     volumes:
       - bambuddy_data:/app/data
       - bambuddy_logs:/app/logs

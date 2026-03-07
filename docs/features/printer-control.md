@@ -1,11 +1,74 @@
 ---
 title: Printer Control
-description: Control chamber, fans, and AI detection settings
+description: Print from printer cards, view printer info, control chamber, fans, and AI detection settings
 ---
 
 # Printer Control
 
 Bambuddy provides control over various printer settings and features directly from the web interface.
+
+---
+
+## :material-printer: Print from Printer Card
+
+Start prints directly from any printer card — no need to navigate to File Manager first.
+
+### Print Button
+
+A green **Print** button appears on each printer card when the printer is idle:
+
+1. Click the **Print** button at the bottom of the printer card
+2. A file upload modal opens — select a `.gcode` or `.gcode.3mf` file
+3. The file is automatically uploaded to your library
+4. The **Print Modal** opens with the printer pre-selected
+5. Configure filament mapping and print options, then click **Print**
+
+The printer selector is hidden since the target printer is already known.
+
+### Drag & Drop
+
+Drag a sliced file directly onto any printer card to start printing:
+
+1. Drag a `.gcode` or `.gcode.3mf` file from your computer onto a printer card
+2. A green **"Drop to print"** overlay appears (or red **"Printer busy"** if unavailable)
+3. Drop the file — it uploads to your library automatically
+4. The **Print Modal** opens with the printer pre-selected
+5. Configure and print
+
+!!! tip "Accepted File Types"
+    Only sliced files (`.gcode` and `.gcode.3mf`) are accepted for drag-and-drop printing. Other file types will show an error. Use the File Manager to upload non-printable files.
+
+### Printer Compatibility Check
+
+Both flows automatically check if the file was sliced for a compatible printer model. If the file's `sliced_for_model` metadata doesn't match the target printer, you'll see an error and the file is removed from the library.
+
+!!! note "Permission Required"
+    Requires the **Printer Control** permission (`printers:control`).
+
+---
+
+## :material-information: Printer Information
+
+View detailed printer information from the three-dot menu on any printer card.
+
+Click **Printer Information** to see:
+
+| Field | Description |
+|-------|-------------|
+| Model | Printer model name |
+| Status | Connection status (online/offline) |
+| State | Current state (idle, printing, paused, etc.) |
+| IP Address | Network address (copyable) |
+| Serial Number | Hardware serial (copyable) |
+| WiFi Signal | Signal strength with quality indicator |
+| Firmware | Current firmware version |
+| Developer Mode | Whether LAN developer mode is enabled |
+| Nozzle Count | Number of nozzles |
+| SD Card | Whether an SD card is inserted |
+| Auto-Archive | Whether auto-archiving is enabled |
+| Print Hours | Total accumulated print hours |
+| Location | Configured printer location |
+| Added | Date the printer was added |
 
 ---
 
