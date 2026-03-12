@@ -1,6 +1,6 @@
 ---
-title: AMS & Humidity Monitoring
-description: Monitor AMS and AMS-HT filament systems
+title: AMS, Humidity & Drying
+description: Monitor AMS and AMS-HT filament systems, control remote drying
 ---
 
 # AMS & Humidity Monitoring
@@ -135,6 +135,74 @@ For AMS-HT (High Temperature) units, temperature is also tracked:
 
 ---
 
+## :material-fire: Remote AMS Drying
+
+Control AMS drying directly from Bambuddy — no need to use the printer's touchscreen. Start, monitor, and stop drying sessions for AMS 2 Pro and AMS-HT units.
+
+### Supported Hardware
+
+Remote drying requires an AMS unit with built-in heating:
+
+| AMS Type | Module Type | Max Temp | Supported |
+|----------|:-----------:|:--------:|:---------:|
+| AMS 2 Pro | n3f | 65°C | :material-check: |
+| AMS-HT | n3s | 85°C | :material-check: |
+| AMS (original) | ams | — | :material-close: |
+
+### Printer Firmware Requirements
+
+Not all printers support remote drying commands. The following minimum firmware versions are required:
+
+| Printer Model | Min Firmware | Notes |
+|---------------|:------------:|-------|
+| X1 / X1C | 01.09.00.00 | |
+| P1P / P1S | 01.08.00.00 | |
+| H2D | 01.02.30.00 | |
+| H2D Pro | Any | No version gate |
+| X1E | Any | No version gate |
+| P2S, A1, A1 Mini | — | :material-close: Not supported |
+| H2S, H2C | — | :material-close: Not supported |
+
+!!! note "Unknown Models"
+    For printers not listed above (future models), Bambuddy allows the drying command. If the printer's firmware doesn't support it, the command fails gracefully with no side effects.
+
+### Starting a Drying Session
+
+1. Find the AMS 2 Pro or AMS-HT card on the Printers page
+2. Click the :material-fire: flame icon in the AMS card header
+3. In the drying popover:
+      - **Select filament type** — Choose from PLA, PETG, TPU, ABS, ASA, PA, PC, or PVA
+      - **Temperature** — Auto-set from BambuStudio official presets; adjust manually with the slider or input field
+      - **Duration** — Auto-set from presets (1–24 hours); adjust as needed
+4. Click **Start**
+
+!!! tip "Filament Presets"
+    Temperature and duration values are sourced from BambuStudio's official filament drying profiles. Selecting a filament type auto-fills the recommended temperature and duration for your AMS type (n3f and n3s have different limits).
+
+### Monitoring Drying Progress
+
+When drying is active, a status bar appears between the AMS header and slot grid:
+
+- **Time remaining** — Countdown in hours and minutes (e.g., "3h 42m" or "42m")
+- The flame icon in the header turns amber to indicate active drying
+
+### Stopping a Drying Session
+
+- Click the **×** button on the drying status bar, or
+- Click the flame icon (when drying is active, it acts as a stop button)
+
+### Permissions
+
+| Action | Required Permission |
+|--------|:------------------:|
+| View drying status | No permission needed |
+| Start / Stop drying | `printers:control` |
+
+!!! warning "Drying During Prints"
+    The AMS can dry filament while the printer is idle or printing. However, drying during a print may affect the AMS temperature readings and humidity levels.
+
+---
+
 ## :material-chart-line: Historical Charts
 
 Click on the humidity or temperature indicator to view historical data:
@@ -205,16 +273,12 @@ Get notified about AMS conditions:
 |---------|-------------|--------|
 | Humidity monitoring | :material-check: | :material-check: |
 | Temperature monitoring | :material-close: | :material-check: |
-| Active drying | :material-close: | :material-check: |
+| [Remote drying](#remote-ams-drying) | :material-close: | :material-check: |
 | High-temp filaments | :material-close: | :material-check: |
 
 ### AMS-HT Temperature Control
 
-AMS-HT units can actively dry filament:
-
-- Set target temperature in printer settings
-- Monitor heating status in Bambuddy
-- Track temperature over time
+AMS-HT units can actively dry filament. See [Remote AMS Drying](#remote-ams-drying) for setup and usage.
 
 ---
 
