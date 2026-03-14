@@ -166,6 +166,55 @@ Not all printers support remote drying commands. The following minimum firmware 
 !!! note "Unknown Models"
     For printers not listed above (future models), Bambuddy allows the drying command. If the printer's firmware doesn't support it, the command fails gracefully with no side effects.
 
+### Power Supply Requirements
+
+AMS 2 Pro and AMS-HT units require an external power supply (PSU) to run the drying heater. Without it, the AMS can only monitor humidity — it cannot actively dry.
+
+The printer firmware reports power constraints via the `dry_sf_reason` field per AMS unit. Bambuddy reads these automatically:
+
+| Reason | Code | Description |
+|--------|:----:|-------------|
+| Insufficient Power | 1 | Too many AMS units drying simultaneously — disconnect other units or connect a PSU |
+| Need Plugin Power | 8 | No external PSU connected — plug in the AMS power adapter |
+| Task Occupied | 0 | Printer is busy with another operation |
+| AMS Busy | 2 | AMS is performing another operation |
+| Consumable at Outlet | 3 | Filament detected at the AMS outlet |
+| Initiating | 4 | Drying is already starting up |
+| Not Supported in 2D Mode | 5 | Cannot dry in current mode |
+| Already Drying | 6 | Drying session already active |
+| Upgrading | 7 | Firmware update in progress |
+
+When a power constraint is detected, the :material-fire: drying button is **disabled** and shows a "Power required" tooltip. This applies to both manual and auto-drying — the scheduler skips AMS units with active `dry_sf_reason` entries.
+
+!!! warning "PSU Not Connected"
+    If you see the drying button greyed out with a "Power required" tooltip, connect the external power adapter to your AMS unit. This is the most common reason drying cannot start.
+
+### HMS Error Codes (AMS Power)
+
+When the AMS encounters a power-related issue, the printer reports it as an HMS (Health Management System) error. These appear in Bambuddy's HMS error panel:
+
+**AMS 2 Pro Errors:**
+
+| HMS Code | Description |
+|----------|-------------|
+| `07XX_9200_0002_0003` | Heater fan 1 can't start — PSU not connected |
+| `07XX_9300_0002_0003` | Heater fan 2 can't start — PSU not connected |
+| `07XX_9800_0002_0001` | PSU voltage too low |
+| `07XX_9800_0002_0002` | PSU voltage too high |
+
+**AMS-HT Errors:**
+
+| HMS Code | Description |
+|----------|-------------|
+| `18XX_2500_0002_0001` | Using printer power instead of dedicated adapter — connect the AMS-HT power adapter |
+| `18XX_9200_0002_0003` | Heater fan 1 can't start — PSU not connected |
+| `18XX_9300_0002_0003` | Heater fan 2 can't start — PSU not connected |
+| `18XX_9800_0002_0001` | PSU voltage too low |
+| `18XX_9800_0002_0002` | PSU voltage too high |
+
+!!! note "HMS Code Format"
+    `XX` represents the AMS unit index (`00`–`07` for units A–H). For example, `0700_9200_0002_0003` is unit A, `0701_9200_0002_0003` is unit B.
+
 ### Starting a Drying Session
 
 1. Find the AMS 2 Pro or AMS-HT card on the Printers page
@@ -213,7 +262,7 @@ Automatically dry AMS filament between scheduled prints. When a printer is idle 
 2. For each AMS unit, it reads the current humidity level
 3. If humidity exceeds the **Fair (orange)** threshold from Settings, drying is triggered
 4. The drying temperature and duration are determined by the loaded filament types using the configured [drying presets](#configurable-drying-presets)
-5. On every scheduler cycle, humidity is re-checked — if it drops to or below the threshold, drying is stopped early
+5. After a minimum of **30 minutes**, humidity is re-checked — if it drops to or below the threshold, drying is stopped early
 6. When the next scheduled print is ready to start, any remaining drying is stopped and the print begins
 
 ### Conservative Temperature Selection
@@ -252,7 +301,7 @@ Auto-drying is stopped automatically when:
 - Auto-drying is disabled in Settings
 
 !!! note "Threshold works both ways"
-    The **Fair (orange)** humidity threshold controls both start and stop. Drying starts when humidity exceeds the threshold and stops when it drops back to or below it. This means drying only runs as long as needed, not for the full configured duration.
+    The **Fair (orange)** humidity threshold controls both start and stop. Drying starts when humidity exceeds the threshold and stops when it drops back to or below it — but only after a **minimum of 30 minutes** of drying. This prevents rapid start/stop cycling when humidity is near the threshold.
 
 ### Requirements
 
