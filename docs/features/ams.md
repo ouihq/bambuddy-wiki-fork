@@ -213,7 +213,8 @@ Automatically dry AMS filament between scheduled prints. When a printer is idle 
 2. For each AMS unit, it reads the current humidity level
 3. If humidity exceeds the **Fair (orange)** threshold from Settings, drying is triggered
 4. The drying temperature and duration are determined by the loaded filament types using the configured [drying presets](#configurable-drying-presets)
-5. When the next scheduled print is ready to start, drying is stopped automatically and the print begins
+5. On every scheduler cycle, humidity is re-checked — if it drops to or below the threshold, drying is stopped early
+6. When the next scheduled print is ready to start, any remaining drying is stopped and the print begins
 
 ### Conservative Temperature Selection
 
@@ -244,10 +245,14 @@ When an AMS unit contains **mixed filament types** (e.g., PLA and PETG in the sa
 
 Auto-drying is stopped automatically when:
 
+- **Humidity drops below threshold** — checked every scheduler cycle; once humidity is at or below the Fair value, drying stops
 - A scheduled print is ready to start (non-blocking mode)
 - The queue item's schedule is removed or changed to "Queue Only"
 - All scheduled items are removed from the queue
 - Auto-drying is disabled in Settings
+
+!!! note "Threshold works both ways"
+    The **Fair (orange)** humidity threshold controls both start and stop. Drying starts when humidity exceeds the threshold and stops when it drops back to or below it. This means drying only runs as long as needed, not for the full configured duration.
 
 ### Requirements
 
