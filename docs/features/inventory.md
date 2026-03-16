@@ -128,7 +128,7 @@ Assign inventory spools to AMS slots to track which filament is loaded where.
 
 ### Assigning a Spool
 
-1. Hover over a non-Bambu-Lab AMS slot on the printer card
+1. Hover over any AMS slot on the printer card (empty or configured, non-Bambu-Lab)
 2. Click **Assign Spool** in the hover card
 
 ![Assign Spool](../assets/inventory-assign.png){ .screenshot }
@@ -171,8 +171,8 @@ AMS slot configuration tells the **printer** what filament profile to use for a 
 6. Click **Configure Slot** to apply
 
 !!! info "When to Configure vs When to Assign"
-    - **Assign Spool**: Links an inventory spool to a slot for tracking purposes (weight, usage history, cost). Does not change the printer's filament profile.
-    - **Configure Slot**: Sends a filament profile to the printer so it uses the correct temperatures and flow settings. You can do both — assign a spool for tracking AND configure the slot for correct print settings.
+    - **Assign Spool**: Links an inventory spool to a slot for tracking (weight, usage history, cost) **and automatically configures the slot** with the spool's filament profile, color, and K-profile. Works on both configured and empty slots.
+    - **Configure Slot**: Manually sends a specific filament profile to the printer. Useful when you want to override the auto-configured settings or set up a slot without an inventory spool.
 
 #### Where Configure Slot Presets Come From
 
@@ -383,10 +383,10 @@ If you're not logged into Bambu Cloud, you'll still see local imports and the bu
 
 | Action | What it does | Affects printer? |
 |--------|-------------|-----------------|
-| **Assign Spool** | Links an inventory spool to an AMS slot for tracking (weight, usage, cost) | No |
-| **Configure Slot** | Sends a filament profile to the printer (temperatures, flow, pressure advance) | Yes |
+| **Assign Spool** | Links an inventory spool to an AMS slot for tracking (weight, usage, cost) and auto-configures the slot with the spool's filament profile, color, and K-profile | Yes |
+| **Configure Slot** | Manually sends a specific filament profile to the printer (temperatures, flow, pressure advance) | Yes |
 
-You typically want to do both: assign the spool so Bambuddy tracks usage, and configure the slot so the printer uses the right settings.
+Assigning a spool is the simplest workflow — it handles both tracking and printer configuration in one step. Use "Configure Slot" when you want to manually override settings or set up a slot without an inventory spool.
 
 ---
 
