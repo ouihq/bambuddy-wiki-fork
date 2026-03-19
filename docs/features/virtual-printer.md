@@ -48,6 +48,8 @@ Each virtual printer uses these ports on its dedicated bind IP:
 | Bind | 3000, 3002 | TCP | Slicer bind/detect handshake (required for all modes) |
 | SSDP | 2021 | UDP | Printer discovery (same LAN only, not needed for VPN/remote) |
 | MQTT | 8883 | TCP/TLS | Printer communication |
+| File Transfer | 6000 | TCP/TLS | Verify job & file upload tunnel (proxy mode) |
+| RTSP Camera | 322 | TCP/TLS | Camera streaming for X1/H2/P2 series (proxy mode) |
 | FTPS | 990 | TCP/TLS | File transfer control |
 | FTP Data | 50000-50100 | TCP | File transfer passive data |
 
@@ -175,6 +177,8 @@ sudo ufw allow 3002/tcp  # Bind/detect
 sudo ufw allow 2021/udp  # SSDP
 sudo ufw allow 8883/tcp  # MQTT
 sudo ufw allow 990/tcp   # FTPS
+sudo ufw allow 6000/tcp  # File transfer tunnel
+sudo ufw allow 322/tcp   # RTSP camera (X1/H2/P2)
 sudo ufw allow 50000:50100/tcp  # FTP passive data
 ```
 
@@ -186,6 +190,8 @@ sudo firewall-cmd --permanent --add-port=3002/tcp  # Bind/detect
 sudo firewall-cmd --permanent --add-port=2021/udp  # SSDP
 sudo firewall-cmd --permanent --add-port=8883/tcp  # MQTT
 sudo firewall-cmd --permanent --add-port=990/tcp   # FTPS
+sudo firewall-cmd --permanent --add-port=6000/tcp  # File transfer tunnel
+sudo firewall-cmd --permanent --add-port=322/tcp   # RTSP camera (X1/H2/P2)
 sudo firewall-cmd --permanent --add-port=50000-50100/tcp  # FTP passive data
 sudo firewall-cmd --reload
 ```
@@ -229,6 +235,8 @@ sudo ufw allow 3002/tcp  # Bind/detect
 sudo ufw allow 2021/udp  # SSDP
 sudo ufw allow 8883/tcp  # MQTT
 sudo ufw allow 990/tcp   # FTPS
+sudo ufw allow 6000/tcp  # File transfer tunnel
+sudo ufw allow 322/tcp   # RTSP camera (X1/H2/P2)
 sudo ufw allow 50000:50100/tcp  # FTP passive data
 ```
 
@@ -240,6 +248,8 @@ sudo firewall-cmd --permanent --add-port=3002/tcp  # Bind/detect
 sudo firewall-cmd --permanent --add-port=2021/udp  # SSDP
 sudo firewall-cmd --permanent --add-port=8883/tcp  # MQTT
 sudo firewall-cmd --permanent --add-port=990/tcp   # FTPS
+sudo firewall-cmd --permanent --add-port=6000/tcp  # File transfer tunnel
+sudo firewall-cmd --permanent --add-port=322/tcp   # RTSP camera (X1/H2/P2)
 sudo firewall-cmd --permanent --add-port=50000-50100/tcp  # FTP passive data
 sudo firewall-cmd --reload
 ```
@@ -266,7 +276,9 @@ services:
       - "3000:3000"                    # Bind/detect
       - "3002:3002"                    # Bind/detect (alt port)
       - "990:990"                      # FTPS
+      - "6000:6000"                    # File transfer tunnel
       - "8883:8883"                    # MQTT
+      - "322:322"                      # RTSP camera (X1/H2/P2)
       - "50000-50100:50000-50100"      # FTP passive data
     volumes:
       - bambuddy_data:/app/data
@@ -690,19 +702,22 @@ Unlike the server modes that archive files locally, **Proxy Mode** forwards your
 
 | Protocol | Bambuddy Listen Port | Printer Port | Purpose |
 |----------|---------------------|--------------|---------|
-| Bind | 3000, 3002 | 3000, 3002 | Slicer bind/detect handshake |
+| Bind | 3000, 3002 | — (local) | Slicer bind/detect handshake (served locally) |
+| MQTT/TLS | 8883 | 8883 | Printer control & status (TLS, IP rewriting) |
+| File Transfer | 6000 | 6000 | Verify job & file upload tunnel (TLS) |
+| RTSP Camera | 322 | 322 | Camera streaming for X1/H2/P2 series (TLS) |
 | FTP/FTPS | 990 | 990 | File transfer control (TLS) |
 | FTP Data | 50000-50100 | dynamic | File transfer data |
-| MQTT/TLS | 8883 | 8883 | Printer control & status (TLS) |
 
 ### Key Benefits
 
 | Feature | Description |
 |---------|-------------|
-| :lock: **TLS-encrypted control channels** | MQTT and FTP control fully encrypted; use VPN for data channel |
+| :lock: **TLS-encrypted control channels** | MQTT, FTP, file transfer, and camera all TLS-encrypted |
 | :globe_with_meridians: **No cloud dependency** | Your data never touches third-party servers |
 | :key: **Uses printer's credentials** | No additional passwords — use your printer's access code |
-| :zap: **Full protocol support** | FTP, MQTT, and bind protocol are all proxied |
+| :zap: **Full protocol support** | FTP, MQTT, file transfer tunnel, camera, and bind protocol |
+| :camera: **Camera streaming** | RTSP camera feed proxied for X1/H2/P2 series (port 322) |
 | :chart_with_upwards_trend: **Connection monitoring** | Real-time status showing active connections |
 
 !!! warning "FTP Data Channel Security"
@@ -729,7 +744,7 @@ Unlike the server modes that archive files locally, **Proxy Mode** forwards your
 **Network Requirements:**
 
 - Bambuddy server accessible from the slicer (same LAN, VPN, or internet)
-- Ports **3000 + 3002** (bind), **990** (FTP), **8883** (MQTT), and **50000-50100** (FTP data) reachable from the slicer
+- Ports **3000 + 3002** (bind), **990** (FTP), **6000** (file transfer), **8883** (MQTT), **322** (RTSP camera), and **50000-50100** (FTP data) reachable from the slicer
 - Static IP or dynamic DNS for your Bambuddy server (if remote)
 
 **Supported Network Configurations:**
@@ -739,8 +754,10 @@ Unlike the server modes that archive files locally, **Proxy Mode** forwards your
 | Same LAN | Automatic | Yes | SSDP broadcast reaches slicer directly |
 | Dual-homed (2 NICs) | Automatic | Yes | Use Network Interface Override to select correct NIC |
 | Docker host mode (Linux) | Automatic | Yes | Host networking passes SSDP traffic |
+| Different VLANs (routed) | Automatic | Yes | SSDP cross-subnet listener responds to M-SEARCH from any interface |
 | Docker bridge mode | **Not available** | **Required** | Bridge networking blocks UDP multicast |
-| VPN (WireGuard/Tailscale) | **Not available** | **Required** | VPN tunnels don't carry UDP multicast |
+| VPN (tun mode) | **Not available** | **Required** | Tun VPN tunnels don't carry UDP broadcast; use manual add |
+| VPN (tap mode) | Automatic | Yes | Tap mode bridges L2 traffic including broadcasts |
 | Port forwarding / internet | **Not available** | **Required** | SSDP is local-network only |
 
 ### Setting Up Proxy Mode
@@ -758,7 +775,9 @@ To access from outside your home network, forward these ports on your router:
 | 3000 | 3000 | TCP | Bambuddy server IP |
 | 3002 | 3002 | TCP | Bambuddy server IP |
 | 990 | 990 | TCP | Bambuddy server IP |
+| 6000 | 6000 | TCP | Bambuddy server IP |
 | 8883 | 8883 | TCP | Bambuddy server IP |
+| 322 | 322 | TCP | Bambuddy server IP |
 | 50000-50100 | 50000-50100 | TCP | Bambuddy server IP |
 
 !!! tip "Recommended: Use a VPN"
@@ -806,7 +825,7 @@ For setups where Bambuddy has interfaces on two networks (e.g., printer on LAN A
 - Enable the virtual printer, then select the slicer-facing interface under **Network Interface Override**
 - Bambuddy will re-broadcast printer SSDP on the slicer's network
 - The slicer discovers the printer automatically via SSDP
-- Camera streaming requires additional NAT/iptables rules (RTSP port 322)
+- All protocols are proxied including camera streaming (RTSP port 322) — no additional NAT rules needed
 
 ### Proxy Mode vs Server Modes
 
@@ -909,6 +928,22 @@ This typically means the slicer doesn't trust the virtual printer's certificate:
 - Check that the printer is in LAN mode
 - Restart the proxy by toggling it off and on
 
+### Proxy Mode: "Connect Using IP and Access Code" Dialog When Printing
+
+If the slicer connects and shows printer status but shows a connection dialog when you click Print:
+
+1. **Check port 6000 is reachable** — BambuStudio uses this port for the file transfer tunnel:
+   ```bash
+   nc -zv BAMBUDDY_IP 6000
+   ```
+2. **Check firewall** — port 6000/tcp must be open between slicer and Bambuddy
+3. **Different VLANs/subnets** — the MQTT IP rewrite ensures the slicer connects to the proxy, not the printer. Check Bambuddy logs for `IP rewrite active` to confirm it's working
+
+### Proxy Mode: Camera Not Loading
+
+- **X1/H2/P2 series**: Camera uses RTSP on port 322. Ensure this port is reachable from the slicer
+- **A1/P1 series**: Camera uses port 6000 (shared with file transfer). Ensure port 6000 is reachable
+
 ### Proxy Mode: Connection Drops During Transfer
 
 - Large files may timeout on slow connections
@@ -920,10 +955,12 @@ This typically means the slicer doesn't trust the virtual printer's certificate:
 
 ### Security
 
-- **Bind protocol** (ports 3000, 3002): Unencrypted TCP — transmits printer identity only, no sensitive data
-- **MQTT control channel**: Fully TLS-encrypted (TLS 1.2)
+- **Bind protocol** (ports 3000, 3002): In proxy mode, Bambuddy responds with the VP's own identity (not forwarded to printer). Unencrypted TCP — transmits printer identity only, no sensitive data
+- **MQTT control channel**: Fully TLS-encrypted (TLS 1.2). In proxy mode, printer IP addresses in MQTT payloads are rewritten to prevent the slicer from bypassing the proxy
+- **File transfer tunnel** (port 6000): Fully TLS-encrypted (TLS 1.2)
+- **Camera streaming** (port 322): Fully TLS-encrypted RTSP (X1/H2/P2 series)
 - **FTP control channel**: Fully TLS-encrypted (implicit FTPS, TLS 1.2)
-- **FTP data channel**: In proxy mode, encrypted between Bambuddy and printer (depends on printer model). **Not encrypted** between slicer and Bambuddy due to a Bambu Studio limitation. Use a VPN for end-to-end data encryption.
+- **FTP data channel**: In proxy mode, encrypted between Bambuddy and printer (depends on printer model). **Not encrypted** between slicer and Bambuddy due to a Bambu Studio limitation. Use a VPN for end-to-end data encryption
 - Self-signed certificates are auto-generated (shared CA persists, per-instance device cert regenerates per serial)
 - Access code authentication required for all connections (8 characters)
 - Certificates stored in `virtual_printer/certs/` (shared CA) and `virtual_printer/certs/{id}/` (per-instance certs)
@@ -931,6 +968,7 @@ This typically means the slicer doesn't trust the virtual printer's certificate:
 ### Limitations
 
 - Each virtual printer requires its own dedicated bind IP address
-- SSDP discovery requires same LAN — use manual IP entry for VPN, remote, or Docker bridge setups
+- SSDP discovery requires same LAN or routed subnets — use manual IP entry for tun-mode VPN, or Docker bridge setups
 - Slicer must trust the self-signed certificate (see [Certificate Installation](#certificate-installation))
 - FTP data channel unencrypted on slicer side (use VPN for full encryption)
+- VPN tun mode does not support SSDP broadcast — printers must be added manually by IP
