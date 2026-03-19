@@ -279,9 +279,9 @@ Click the speed badge to open a dropdown menu with four presets:
 
 ---
 
-## :material-fan: Fan Controls
+## :material-fan: Fan Status
 
-Monitor and adjust cooling fans directly from the printer card.
+Monitor cooling fan speeds in real time directly from the printer card.
 
 ### Real-Time Fan Status
 
@@ -290,31 +290,16 @@ The Controls section displays compact fan badges showing real-time speeds:
 | Fan | Icon | Color | Description |
 |-----|:----:|:-----:|-------------|
 | **Part Cooling** | :material-fan: | Cyan | Cools printed layers (0-100%) |
-| **Auxiliary** | :material-weather-windy: | Blue | Controls chamber airflow (0-100%) |
-| **Chamber** | :material-air-filter: | Green | Exhausts hot air (0-100%) |
+| **Auxiliary** | :material-weather-windy: | Blue | Chamber airflow (0-100%) |
+| **Chamber** | :material-air-filter: | Green | Exhausts hot air from enclosure (0-100%) |
 
 Badges are always visible with dynamic coloring:
 
-- **Active** (colored icon + text): Fan is running
+- **Active** (colored icon + text): Fan is running, shows current speed %
 - **Inactive** (gray icon + text): Fan is off, shows 0%
 
-### Part Cooling Fan
-
-- View current speed (%)
-- Adjust during print if needed
-- Auto-controlled by slicer normally
-
-### Auxiliary Fan
-
-- Controls airflow in the chamber
-- Helps with certain materials
-- Can be adjusted manually
-
-### Chamber Fan
-
-- Exhausts hot air from enclosure
-- Important for high-temp printing
-- Auto-controlled based on chamber temp
+!!! info "Display Only"
+    Fan badges show the current speed reported by the printer. Fan speeds are controlled by the slicer profile and printer firmware — they cannot be adjusted through BambuBuddy.
 
 ---
 
