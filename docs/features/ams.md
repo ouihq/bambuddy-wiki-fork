@@ -223,6 +223,7 @@ When the AMS encounters a power-related issue, the printer reports it as an HMS 
       - **Select filament type** — Choose from PLA, PETG, TPU, ABS, ASA, PA, PC, or PVA
       - **Temperature** — Auto-set from BambuStudio official presets; adjust manually with the slider or input field
       - **Duration** — Auto-set from presets (1–24 hours); adjust as needed
+      - **Rotate spool** — Optionally enable spool rotation during drying for more even heat distribution. Off by default. The firmware silently disables rotation if filament is currently loaded from the AMS unit
 4. Click **Start**
 
 !!! tip "Filament Presets"
