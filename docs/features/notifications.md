@@ -5,7 +5,7 @@ description: Multi-provider push notifications for print events
 
 # Notifications
 
-Get notified about print events via WhatsApp, Telegram, Discord, Email, and more.
+Get notified about print events via WhatsApp, Telegram, Discord, Email, Home Assistant, and more.
 
 ![Notifications Settings](../assets/settings_notifications.png){ .screenshot }
 
@@ -21,6 +21,7 @@ Get notified about print events via WhatsApp, Telegram, Discord, Email, and more
 | **Pushover** | :material-star::material-star-outline::material-star-outline: Easy | Professional push service |
 | **Telegram** | :material-star::material-star::material-star-outline: Medium | Via Telegram Bot |
 | **Email** | :material-star::material-star::material-star-outline: Medium | SMTP email |
+| **Home Assistant** | :material-star::material-star-outline::material-star-outline: Easy | Persistent notifications in HA dashboard |
 | **Webhook** | :material-star::material-star::material-star: Flexible | Custom HTTP POST |
 
 ---
@@ -151,6 +152,21 @@ Send via email:
 
 ---
 
+### Home Assistant
+
+Zero-config notifications if Home Assistant is already connected:
+
+1. Ensure HA is configured in **Settings** > **Network** > **Home Assistant**
+2. Add a notification provider and select **Home Assistant**
+3. No additional fields needed — click **Send Test** to verify
+
+Notifications appear as persistent notifications in your HA dashboard.
+
+!!! tip "Forward to Mobile"
+    Use HA automations to forward persistent notifications to your phone via the HA Companion app, WhatsApp, or any other service.
+
+---
+
 ### Webhook (Custom)
 
 For custom integrations:
@@ -203,6 +219,7 @@ For failed/stopped prints, additional fields are included:
 | **Print Completed** | Print finishes successfully (includes filament usage) |
 | **Print Failed** | Print fails or errors (includes scaled filament usage and progress) |
 | **Print Stopped** | Manual cancellation (includes scaled filament usage and progress) |
+| **First Layer Complete** | First layer finished — check adhesion remotely (includes camera snapshot) |
 | **Bed Cooled** | Bed temperature dropped below threshold after print (configurable in Settings) |
 | **Progress Milestones** | At 25%, 50%, 75% |
 
@@ -331,6 +348,12 @@ Insert dynamic content with `{variable}`:
 - `{printer}` - Printer name
 - `{error_type}` - HMS error type
 - `{error_detail}` - Error description
+
+**First Layer Complete:**
+
+- `{printer}` - Printer name
+- `{filename}` - Print filename
+- `{total_layers}` - Total layer count
 
 **Bed Cooled:**
 

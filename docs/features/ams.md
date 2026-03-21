@@ -1,6 +1,6 @@
 ---
-title: AMS & Humidity Monitoring
-description: Monitor AMS and AMS-HT filament systems
+title: AMS, Humidity & Drying
+description: Monitor AMS and AMS-HT filament systems, manual and automatic remote drying, ambient drying, configurable presets
 ---
 
 # AMS & Humidity Monitoring
@@ -135,6 +135,260 @@ For AMS-HT (High Temperature) units, temperature is also tracked:
 
 ---
 
+## :material-fire: Remote AMS Drying
+
+Control AMS drying directly from Bambuddy — no need to use the printer's touchscreen. Start, monitor, and stop drying sessions for AMS 2 Pro and AMS-HT units.
+
+### Supported Hardware
+
+Remote drying requires an AMS unit with built-in heating:
+
+| AMS Type | Module Type | Max Temp | Supported |
+|----------|:-----------:|:--------:|:---------:|
+| AMS 2 Pro | n3f | 65°C | :material-check: |
+| AMS-HT | n3s | 85°C | :material-check: |
+| AMS (original) | ams | — | :material-close: |
+
+### Printer Firmware Requirements
+
+Not all printers support remote drying commands. The following minimum firmware versions are required:
+
+| Printer Model | Min Firmware | Notes |
+|---------------|:------------:|-------|
+| X1 / X1C | 01.09.00.00 | |
+| P1P / P1S | 01.08.00.00 | |
+| H2D | 01.02.30.00 | |
+| H2D Pro | Any | No version gate |
+| X1E | Any | No version gate |
+| P2S, A1, A1 Mini | — | :material-close: Not supported |
+| H2S, H2C | — | :material-close: Not supported |
+
+!!! note "Unknown Models"
+    For printers not listed above (future models), Bambuddy allows the drying command. If the printer's firmware doesn't support it, the command fails gracefully with no side effects.
+
+### Power Supply Requirements
+
+AMS 2 Pro and AMS-HT units require an external power supply (PSU) to run the drying heater. Without it, the AMS can only monitor humidity — it cannot actively dry.
+
+The printer firmware reports power constraints via the `dry_sf_reason` field per AMS unit. Bambuddy reads these automatically:
+
+| Reason | Code | Description |
+|--------|:----:|-------------|
+| Insufficient Power | 1 | Too many AMS units drying simultaneously — disconnect other units or connect a PSU |
+| Need Plugin Power | 8 | No external PSU connected — plug in the AMS power adapter |
+| Task Occupied | 0 | Printer is busy with another operation |
+| AMS Busy | 2 | AMS is performing another operation |
+| Consumable at Outlet | 3 | Filament detected at the AMS outlet |
+| Initiating | 4 | Drying is already starting up |
+| Not Supported in 2D Mode | 5 | Cannot dry in current mode |
+| Already Drying | 6 | Drying session already active |
+| Upgrading | 7 | Firmware update in progress |
+
+When a power constraint is detected, the :material-fire: drying button is **disabled** and shows a "Power required" tooltip. This applies to manual drying, queue auto-drying, and ambient drying — the scheduler skips AMS units with active `dry_sf_reason` entries.
+
+!!! warning "PSU Not Connected"
+    If you see the drying button greyed out with a "Power required" tooltip, connect the external power adapter to your AMS unit. This is the most common reason drying cannot start.
+
+### HMS Error Codes (AMS Power)
+
+When the AMS encounters a power-related issue, the printer reports it as an HMS (Health Management System) error. These appear in Bambuddy's HMS error panel:
+
+**AMS 2 Pro Errors:**
+
+| HMS Code | Description |
+|----------|-------------|
+| `07XX_9200_0002_0003` | Heater fan 1 can't start — PSU not connected |
+| `07XX_9300_0002_0003` | Heater fan 2 can't start — PSU not connected |
+| `07XX_9800_0002_0001` | PSU voltage too low |
+| `07XX_9800_0002_0002` | PSU voltage too high |
+
+**AMS-HT Errors:**
+
+| HMS Code | Description |
+|----------|-------------|
+| `18XX_2500_0002_0001` | Using printer power instead of dedicated adapter — connect the AMS-HT power adapter |
+| `18XX_9200_0002_0003` | Heater fan 1 can't start — PSU not connected |
+| `18XX_9300_0002_0003` | Heater fan 2 can't start — PSU not connected |
+| `18XX_9800_0002_0001` | PSU voltage too low |
+| `18XX_9800_0002_0002` | PSU voltage too high |
+
+!!! note "HMS Code Format"
+    `XX` represents the AMS unit index (`00`–`07` for units A–H). For example, `0700_9200_0002_0003` is unit A, `0701_9200_0002_0003` is unit B.
+
+### Starting a Drying Session
+
+1. Find the AMS 2 Pro or AMS-HT card on the Printers page
+2. Click the :material-fire: flame icon in the AMS card header
+3. In the drying popover:
+      - **Select filament type** — Choose from PLA, PETG, TPU, ABS, ASA, PA, PC, or PVA
+      - **Temperature** — Auto-set from BambuStudio official presets; adjust manually with the slider or input field
+      - **Duration** — Auto-set from presets (1–24 hours); adjust as needed
+4. Click **Start**
+
+!!! tip "Filament Presets"
+    Temperature and duration defaults come from BambuStudio's official filament profiles. You can customize them in **Settings** > **AMS Display Thresholds** > **Drying Presets**. These presets are shared between manual drying, queue auto-drying, and ambient drying.
+
+### Monitoring Drying Progress
+
+When drying is active, a status bar appears between the AMS header and slot grid:
+
+- **Time remaining** — Countdown in hours and minutes (e.g., "3h 42m" or "42m")
+- The flame icon in the header turns amber to indicate active drying
+
+### Stopping a Drying Session
+
+- Click the **×** button on the drying status bar, or
+- Click the flame icon (when drying is active, it acts as a stop button)
+
+### Permissions
+
+| Action | Required Permission |
+|--------|:------------------:|
+| View drying status | No permission needed |
+| Start / Stop drying | `printers:control` |
+
+!!! warning "Drying During Prints"
+    The AMS can dry filament while the printer is idle or printing. However, drying during a print may affect the AMS temperature readings and humidity levels.
+
+---
+
+## :material-fire-circle: Queue Auto-Drying
+
+Automatically dry AMS filament between scheduled prints. When a printer is idle and humidity exceeds the configured threshold, Bambuddy starts a drying session to keep filament in optimal condition before the next print begins.
+
+### How It Works
+
+1. The scheduler checks idle printers that have **scheduled** queue items
+2. For each AMS unit, it reads the current humidity level
+3. If humidity exceeds the **Fair (orange)** threshold from Settings, drying is triggered
+4. The drying temperature and duration are determined by the loaded filament types using the configured [drying presets](#configurable-drying-presets)
+5. After a minimum of **30 minutes**, humidity is re-checked — if it drops to or below the threshold, drying is stopped early
+6. When the next scheduled print is ready to start, any remaining drying is stopped and the print begins
+
+### Conservative Temperature Selection
+
+When an AMS unit contains **mixed filament types** (e.g., PLA and PETG in the same unit), the scheduler uses conservative parameters:
+
+- **Temperature** — The **lowest** temperature across all loaded filaments (to avoid overheating sensitive materials)
+- **Duration** — The **longest** duration across all loaded filaments
+
+### Enabling Auto-Drying
+
+1. Go to **Settings** > **AMS Display Thresholds**
+2. Set the **Fair (orange) ≤** humidity threshold — this is the trigger point for auto-drying
+3. Scroll to **Queue Auto-Drying**
+4. Enable **Enable auto-drying**
+5. Optionally enable **Wait for drying to complete** (blocking mode)
+
+### Blocking vs Non-Blocking Mode
+
+| Mode | Behavior |
+|------|----------|
+| **Non-blocking** (default) | Prints take priority. Drying stops when a print is ready to start. |
+| **Blocking** | Queue waits until the drying session finishes before starting the next print. |
+
+!!! tip "Which mode should I use?"
+    **Non-blocking** is recommended for most users — it ensures prints start on time while filling idle gaps with drying. Use **blocking** only if filament dryness is critical for print quality (e.g., Nylon, PC) and you don't mind delayed print starts.
+
+### When Auto-Drying Stops
+
+Auto-drying is stopped automatically when:
+
+- **Humidity drops below threshold** — checked every scheduler cycle; once humidity is at or below the Fair value, drying stops
+- A scheduled print is ready to start (non-blocking mode)
+- The queue item's schedule is removed or changed to "Queue Only"
+- All scheduled items are removed from the queue
+- Auto-drying is disabled in Settings
+
+!!! note "Threshold works both ways"
+    The **Fair (orange)** humidity threshold controls both start and stop. Drying starts when humidity exceeds the threshold and stops when it drops back to or below it — but only after a **minimum of 30 minutes** of drying. This prevents rapid start/stop cycling when humidity is near the threshold.
+
+### Requirements
+
+- At least one **scheduled** queue item (items in "Queue Only" mode do not trigger auto-drying)
+- AMS 2 Pro or AMS-HT unit (original AMS does not support drying)
+- Supported printer firmware (see [firmware requirements](#printer-firmware-requirements) above)
+- Humidity above the Fair threshold
+
+!!! note "No Scheduled Prints?"
+    If you want drying to run on idle printers regardless of whether prints are scheduled, see [Ambient Drying](#ambient-drying) below.
+
+---
+
+## :material-fire-alert: Ambient Drying
+
+Automatically dry filament on any idle printer whenever AMS humidity exceeds the configured threshold — no scheduled prints required. While [queue auto-drying](#queue-auto-drying) only activates when prints are scheduled, ambient drying keeps filament dry on all idle printers at all times.
+
+### How It Works
+
+1. The scheduler continuously monitors all idle printers
+2. For each AMS unit, it reads the current humidity level
+3. If humidity exceeds the **Fair (orange)** threshold from Settings, drying is triggered
+4. The drying temperature and duration are determined by the loaded filament types using the configured [drying presets](#configurable-drying-presets)
+5. After a minimum of **30 minutes**, humidity is re-checked — if it drops to or below the threshold, drying is stopped early
+
+Unlike queue auto-drying, ambient drying does not require any scheduled queue items. It runs whenever a printer is idle and its AMS humidity is above the threshold.
+
+### Enabling Ambient Drying
+
+1. Go to **Settings** > **Print Queue**
+2. Find **Ambient Drying**
+3. Enable **Enable ambient drying**
+
+### Using Both Modes Together
+
+Ambient drying and queue auto-drying can be enabled simultaneously. They complement each other:
+
+| Mode | Triggers when | Stops when |
+|------|---------------|------------|
+| **Queue auto-drying** | Printer is idle with scheduled prints pending | Humidity drops below threshold, or next print is ready to start |
+| **Ambient drying** | Printer is idle (no scheduled prints required) | Humidity drops below threshold |
+
+When both are enabled and a printer has scheduled prints, queue auto-drying takes precedence (since it is aware of print scheduling and blocking/non-blocking behavior). On printers with no scheduled prints, ambient drying takes over.
+
+### Requirements
+
+- AMS 2 Pro or AMS-HT unit (original AMS does not support drying)
+- Supported printer firmware (see [firmware requirements](#printer-firmware-requirements) above)
+- Humidity above the Fair threshold
+- No active power constraints on the AMS unit (see [power supply requirements](#power-supply-requirements))
+
+!!! tip "Print Farm Use Case"
+    Ambient drying is particularly useful for print farms where printers may sit idle for extended periods. Rather than letting humidity build up, Bambuddy keeps filament dry on every idle printer automatically.
+
+---
+
+## :material-tune: Configurable Drying Presets
+
+Customize the drying temperature and duration for each filament type. These presets are used by both [manual drying](#starting-a-drying-session), [queue auto-drying](#queue-auto-drying), and [ambient drying](#ambient-drying).
+
+### Default Presets
+
+Defaults are based on BambuStudio's official filament drying profiles:
+
+| Filament | AMS 2 Pro Temp | AMS-HT Temp | AMS 2 Pro Duration | AMS-HT Duration |
+|----------|:--------------:|:-----------:|:-------------------:|:---------------:|
+| PLA | 45°C | 45°C | 12h | 12h |
+| PETG | 65°C | 65°C | 12h | 12h |
+| TPU | 65°C | 75°C | 12h | 18h |
+| ABS | 65°C | 80°C | 12h | 8h |
+| ASA | 65°C | 80°C | 12h | 8h |
+| PA | 65°C | 85°C | 12h | 12h |
+| PC | 65°C | 80°C | 12h | 8h |
+| PVA | 65°C | 85°C | 12h | 18h |
+
+### Editing Presets
+
+1. Go to **Settings** > **AMS Display Thresholds**
+2. Find the **Drying Presets** table
+3. Edit temperature (°C) and duration (hours) for each filament type
+4. Changes auto-save
+
+!!! note "AMS 2 Pro Temperature Limit"
+    AMS 2 Pro (n3f) has a hardware maximum of 65°C. AMS-HT (n3s) supports up to 85°C.
+
+---
+
 ## :material-chart-line: Historical Charts
 
 Click on the humidity or temperature indicator to view historical data:
@@ -205,16 +459,12 @@ Get notified about AMS conditions:
 |---------|-------------|--------|
 | Humidity monitoring | :material-check: | :material-check: |
 | Temperature monitoring | :material-close: | :material-check: |
-| Active drying | :material-close: | :material-check: |
+| [Remote drying](#remote-ams-drying) | :material-close: | :material-check: |
 | High-temp filaments | :material-close: | :material-check: |
 
 ### AMS-HT Temperature Control
 
-AMS-HT units can actively dry filament:
-
-- Set target temperature in printer settings
-- Monitor heating status in Bambuddy
-- Track temperature over time
+AMS-HT units can actively dry filament. See [Remote AMS Drying](#remote-ams-drying) for setup and usage.
 
 ---
 
@@ -318,3 +568,6 @@ Sync AMS slots with Spoolman for complete filament tracking:
 
 !!! tip "AMS-HT for Hygroscopic Filaments"
     Consider AMS-HT for moisture-sensitive materials like Nylon, PC, and PETG.
+
+!!! tip "Auto-Drying Between Prints"
+    Enable queue auto-drying to keep filament dry during long print queues, or enable ambient drying to keep filament dry on all idle printers — even when no prints are scheduled. Both use the Fair humidity threshold as the trigger point.
