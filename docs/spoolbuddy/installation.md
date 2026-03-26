@@ -22,7 +22,7 @@ Before running the installer:
 Use the install script from the Bambuddy repository:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/maziggy/bambuddy/main/install/install.sh -o install.sh
+curl -fsSL https://raw.githubusercontent.com/maziggy/bambuddy/refs/heads/dev/spoolbuddy/install/install.sh -o install.sh
 chmod +x install.sh
 sudo ./install.sh
 ```
