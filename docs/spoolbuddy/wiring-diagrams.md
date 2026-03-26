@@ -93,7 +93,7 @@ The SparkFun Qwiic NAU7802 communicates over **I2C bus 1** at address **`0x2A`**
   ┌───────────────────┐                 ┌──────────────────────────┐
   │                   │                 │                          │
   │  3V3  ────────── ─┼── Red ───────── │── Pin 17  (3V3)          │
-  │  GND  ────────── ─┼── Black ─────── │── Pin  9  (GND)          │
+  │  GND  ────────── ─┼── Black ─────── │── Pin  6  (GND)          │
   │  SDA  ────────── ─┼── Yellow ────── │── Pin  3  (GPIO2 / SDA1) │
   │  SCL  ────────── ─┼── Green ─────── │── Pin  5  (GPIO3 / SCL1) │
   │  INT  ────────── ─┼   (NC)          │                          │
@@ -177,12 +177,6 @@ Several connector types can be used to connect wires to the Pi's GPIO pins:
 
 Soldering wires directly to the PN5180 and NAU7802 module pads is straightforward and gives a reliable, permanent connection. This is the recommended approach for the module side of each harness.
 
-### Case Screws
-
-| Qty | Size  | Use                  |
-|-----|-------|----------------------|
-| 4   | M2.5  | Closing the case     |
-
 ---
 
 ## :material-chip: Full System ASCII Wiring Diagram
@@ -220,7 +214,7 @@ Soldering wires directly to the PN5180 and NAU7802 module pads is straightforwar
 
 ## :material-cog: Required Boot Config
 
-Add the following to `/boot/firmware/config.txt` (the SpoolBuddy installer does this automatically):
+Add the following to `/boot/firmware/config.txt` (if you use the SpoolBuddy installer, it will handle this step automatically):
 
 ```ini
 # Enable SPI with no automatic CS (manual GPIO23 chip-select)
@@ -257,20 +251,8 @@ sudo i2cdetect -y 1
 # Expected: "2a" appears in the grid
 ```
 
-Then run the SpoolBuddy diagnostic scripts:
-
-```bash
-# PN5180 NFC diagnostics
-sudo /opt/bambuddy/spoolbuddy/venv/bin/python \
-  /opt/bambuddy/spoolbuddy/scripts/pn5180_diag.py
-
-# Scale / NAU7802 diagnostics
-sudo /opt/bambuddy/spoolbuddy/venv/bin/python \
-  /opt/bambuddy/spoolbuddy/scripts/scale_diag.py
-```
-
-!!! success "All green?"
-    If both diagnostics pass, your wiring is correct. Proceed to [Installation](installation.md) or [Configuration](configuration.md).
+!!! success "Hardware detected?"
+    If SPI and I2C devices appear and the NAU7802 shows at `0x2A`, your wiring is correct. Proceed to [Assembly](assembly.md) to build the case, then [Installation](installation.md) to set up the software.
 
 !!! tip "Troubleshooting wiring issues"
     If diagnostics fail, double-check these common issues:
